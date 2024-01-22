@@ -16,7 +16,7 @@ df[!,:pdf] = pdf.(d,x)
 println(first(df,5))
 
 p = Plots.plot(df.x, df.pdf, label="PDF")
-Plots.savefig(p,"pdf.png")
+# Plots.savefig(p,"pdf.png")
 
 
 # CDF
@@ -107,8 +107,8 @@ println("Kurtosis versus Expected $(mean(kurts) - kurtosis(d))")
 #########################################################################################
 # Test the kurtosis function for bias in small sample sizes
 d = Normal(0,1)
-sample_size = 100000
-samples = 100
+sample_size = 100
+samples = 1000
 kurts = Vector{Float64}(undef,samples)
 Threads.@threads for i in 1:samples
     kurts[i] = kurtosis(rand(d,sample_size))
