@@ -1,0 +1,47 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 读取数据
+rets = pd.read_csv("Project/DailyReturn.csv")
+rets.dropna(subset=['SPY'], inplace=True)  # 删除SPY列中含有缺失值的行
+rets.drop(columns=['Column1'], inplace=True)  # 删除日期列
+
+# 数据类型转换
+for col in rets.columns:
+    if rets[col].dtype == 'O':  # 检查对象类型的列
+        rets[col] = rets[col].astype(float)
+
+# 加权协方差矩阵函数
+def ewCovar(x, λ):
+    m, n = x.shape
+    xm = x.mean(axis=0)
+    x_demeaned = x - xm
+    w = (1 - λ) * λ ** np.arange(m-1, -1, -1)
+    w /= w.sum()
+    cov_matrix = (w[:, None] * x_demeaned).T @ x_demeaned
+    return cov_matrix
+
+# PCA百分比解释函数
+def PCA_pctExplained(a):
+    vals = np.linalg.eigvalsh(a)[::-1]
+    total = vals.sum()
+    pct_explained = np.cumsum(vals) / total
+    return pct_explained
+
+# 测试函数
+λ_values = [0.75, 0.85, 0.90, 0.95, 0.99]
+pctExplained = pd.DataFrame({'x': range(1, rets.shape[1] + 1)})
+for λ in λ_values:
+    cov_matrix = ewCovar(rets.values, λ)
+    pctExplained[f'λ={λ}'] = PCA_pctExplained(cov_matrix)
+
+# 绘图
+plt.figure(figsize=(10, 6))
+for λ in λ_values:
+    plt.plot(pctExplained['x'], pctExplained[f'λ={λ}'], label=f'λ={λ}')
+plt.legend(loc='lower right')
+plt.title('% Explained by Eigenvalue')
+plt.xlabel('Number of Components')
+plt.ylabel('Cumulative % of Explained Variance')
+plt.show()
